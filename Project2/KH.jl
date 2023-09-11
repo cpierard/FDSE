@@ -6,8 +6,8 @@ using Oceananigans
 
 # First, we need to set some physical parameters for the simulation
 # Set the domain size in non-dimensional coordinates
-Lx = 8  # size in the x-direction
-Lz = 1   # size in the vertical (z) direction 
+Lx = 9.56  # size in the x-direction
+Lz = 3   # size in the vertical (z) direction 
 
 # Set the grid size
 Nx = 256  # number of gridpoints in the x-direction
@@ -15,20 +15,20 @@ Nz = 64   # number of gridpoints in the z-direction
 
 # Some timestepping parameters
 max_Δt = 0.02 # maximum allowable timestep 
-duration = 20 # The non-dimensional duration of the simulation
+duration = 50 # The non-dimensional duration of the simulation
 
 # Set the Reynolds number (Re=Ul/ν)
-Re = 5000
+Re = 2000
 # Set the Prandtl number (Pr=ν/κ)
 Pr = 1
 
 # Parameters for the initial condition:
-S₀=10 # maximum shear
+S₀=30 # maximum shear
 N₀=sqrt(10) # maximum buoyancy frequency
 h=0.1 # shear layer width
 
 # Set the amplitude of the random perturbation (kick)
-kick = 0.05
+kick = 5e-3
 
 # construct a rectilinear grid using an inbuilt Oceananigans function
 # Here, we use periodic (cyclic) boundary conditions in x

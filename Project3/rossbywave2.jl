@@ -32,10 +32,11 @@ model = NonhydrostaticModel(; grid,
 # Set wavenumbers associated with the initial condition
 k = 2 * pi / 200kilometers 
 l = 2 * pi / 200kilometers
+γ = 1e-7
 
 # Define functions for the initial conditions
-u₀ = 0.1   # units: m/s
-uᵢ(x, y, z) = u₀ * sin(k * x) * sin(l * y)
+u₀ = 0.01   # units: m/s
+uᵢ(x, y, z) = u₀ * sin(k * x) * sin(l * y) + y*γ
 vᵢ(x, y, z) = u₀ * (k / l) * cos(k * x) * cos(l * y)
 wᵢ(x, y, z) = 0
 cᵢ(x, y, z) = sin(k * x) * cos(l * y) # Here, we set the function for c so that it is proportional to the streamfunction associated with (u,v)
@@ -53,7 +54,7 @@ progress(sim) = @info string("Iter: ", iteration(sim),
 simulation.callbacks[:progress] = Callback(progress, IterationInterval(10))
 
 # Save output from the simulation
-filename = "rossbywave"
+filename = "rossbywave2"
 
 u, v, w = model.velocities
 c = model.tracers.c

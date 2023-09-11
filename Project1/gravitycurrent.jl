@@ -3,6 +3,7 @@
 # Load some standard libraries that we will need
 using Printf
 using Oceananigans
+using Plots
 
 # First, we need to set some physical parameters for the simulation
 # Set the domain size in non-dimensional coordinates
@@ -21,7 +22,7 @@ duration = 20 # The non-dimensional duration of the simulation
 Re = 5000
 
 # Set the change in the non-dimensional buouancy 
-Δb = 1 
+Δb = 1
 
 # Set the amplitude of the random perturbation (kick)
 kick = 0.05
@@ -68,7 +69,7 @@ model = NonhydrostaticModel(; grid,
 uᵢ(x, y, z) = kick * randn()
 vᵢ(x, y, z) = 0
 wᵢ(x, y, z) = kick * randn()
-bᵢ(x, y, z) = (Δb / 2) * (1 + tanh((x - xl) / Lf))
+bᵢ(x, y, z) = (Δb / 2) * (1 - tanh((xl - x) / Lf))  + (Δb / 2) * (1 + tanh((9 - x) / Lf)) 
 cᵢ(x, y, z) = exp(-((x - Lx / 2) / (Lx / 50))^2) # Initialize with a thin tracer (dye) streak in the center of the domain
 
 # Send the initial conditions to the model to initialize the variables

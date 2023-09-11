@@ -1,7 +1,7 @@
 
 # This script reads in output from KH.jl, makes a plot, and saves an animation
 
-using Oceananigans, JLD2, Plots, Printf
+using Oceananigans, JLD2, Plots, Printf, Statistics
 
 # Set the filename (without the extension)
 filename = "KH"
@@ -34,6 +34,10 @@ iterations = parse.(Int, keys(file_xz["timeseries/t"]))
 
 @info "Making an animation from saved data..."
 
+
+mean_KE_perturbation = zeros(length(iterations))
+time = zeros(length(iterations))
+
 # Here, we loop over all iterations
 anim = @animate for (i, iter) in enumerate(iterations)
 
@@ -47,19 +51,30 @@ anim = @animate for (i, iter) in enumerate(iterations)
     χ_xz = file_xz["timeseries/χ/$iter"][:, 1, :];
     ϵ_xz = file_xz["timeseries/ϵ/$iter"][:, 1, :];
 
+    u_avg = mean(u_xz, dims = 1);
+    w_avg = mean(w_xz, dims = 1);
+
+    u_pert = u_xz .- u_avg;
+    w_pert = w_xz .- w_avg;
+
+    KE = 0.5 .*(u_pert .^ 2) .+ (w_pert[:,:64] .^ 2)
+    mean_KE_perturbation[i] = mean(KE)
+
     t = file_xz["timeseries/t/$iter"];
+    time[i] = t
+
 
         b_xz_plot = heatmap(xb, zb, b_xz'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal, xlims = (0, Lx), ylims = (0, Lz)); 
-        ω_xz_plot = heatmap(xω, zω, ω_xz'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal, xlims = (0, Lx), ylims = (0, Lz)); 
+        ω_xz_plot = heatmap(xω, zω, ω_xz'; color = :viridis, xlabel = "x", ylabel = "z", aspect_ratio = :equal, xlims = (0, Lx), ylims = (0, Lz)); 
         χ_xz_plot = heatmap(xχ, zχ, χ_xz'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal, xlims = (0, Lx), ylims = (0, Lz)); 
-        ϵ_xz_plot = heatmap(xϵ, zϵ, ϵ_xz'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal, xlims = (0, Lx), ylims = (0, Lz)); 
+        ϵ_xz_plot = heatmap(xϵ, zϵ, KE'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal, xlims = (0, Lx), ylims = (0, Lz)); 
 
     u_title = @sprintf("u, t = %s", round(t));
     v_title = @sprintf("v, t = %s", round(t));
     w_title = @sprintf("w, t = %s", round(t));
     b_title = @sprintf("b, t = %s", round(t));
     ω_title = @sprintf("vorticity (ω), t = %s", round(t));
-    ϵ_title = @sprintf("KE dissipation (ϵ), t = %s", round(t));
+    ϵ_title = @sprintf("KE perturbation, t = %s", round(t));
     χ_title = @sprintf("buoyancy variance dissipation (χ), t = %s", round(t));
 
 # Combine the sub-plots into a single figure
@@ -71,3 +86,5 @@ end
 
 # Save the animation to a file
 mp4(anim, "KH.mp4", fps = 20) # hide
+
+plot(time, mean_KE_perturbation, xlabel = "time", ylabel = "mean KE perturbation", legend = false)
