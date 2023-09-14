@@ -74,7 +74,7 @@ anim = @animate for (i, iter) in enumerate(iterations)
     ω_xy_plot = Plots.heatmap(xω/1e3, yω/1e3, ω_xy'; color = :balance, xlabel = "x (km)", ylabel = "y (km)", aspect_ratio = :equal, title=ω_title, fontsize=14); 
     av_xy_plot = Plots.heatmap(xω/1e3, yω/1e3, av_xy[:,:]'; color = :balance, xlabel = "x (km)", ylabel = "y (km)", aspect_ratio = :equal, title=av_title, fontsize=14);
 
-    plot(av_xy_plot, ω_xy_plot, layout = (1, 2), size = (1300, 600))
+    plot(av_xy_plot, u_xy_plot, layout = (1, 2), size = (1300, 600))
     
     iter == iterations[end] && close(file_xy)
 end
@@ -83,4 +83,4 @@ end
 mp4(anim, filename * ".mp4", fps = 20) # hide
 
 # Now, make a plot of our saved variables
-Plots.heatmap(xu / 1kilometer, t_save / 1day, u_mid', xlabel="x (km)", ylabel="t (days)", title="u at y=Ly/2")
+# Plots.heatmap(xu / 1kilometer, t_save / 1day, u_mid', xlabel="x (km)", ylabel="t (days)", title="u at y=Ly/2")

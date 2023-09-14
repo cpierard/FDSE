@@ -34,7 +34,7 @@ k = 2 * pi / 200kilometers
 l = 2 * pi / 200kilometers
 
 # Define functions for the initial conditions
-u₀ = 0.1   # units: m/s
+u₀ = 0.001   # units: m/s
 uᵢ(x, y, z) = u₀ * sin(k * x) * sin(l * y)
 vᵢ(x, y, z) = u₀ * (k / l) * cos(k * x) * cos(l * y)
 wᵢ(x, y, z) = 0

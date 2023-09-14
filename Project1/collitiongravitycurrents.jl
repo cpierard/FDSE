@@ -11,8 +11,8 @@ Lx = 10  # size in the x-direction
 Lz = 1   # size in the vertical (z) direction 
 
 # Set the grid size
-Nx = 512  # number of gridpoints in the x-direction
-Nz = 64   # number of gridpoints in the z-direction
+Nx = 256  # number of gridpoints in the x-direction
+Nz = 32   # number of gridpoints in the z-direction
 
 # Some timestepping parameters
 max_Δt = 0.05 # maximum allowable timestep 
@@ -61,7 +61,7 @@ model = NonhydrostaticModel(; grid,
                buoyancy = Buoyancy(model=BuoyancyTracer()), # this tells the model that b will act as the buoyancy (and influence momentum) 
                 closure = (ScalarDiffusivity(ν = 1 / Re, κ = 1 / Re)),  # set a constant kinematic viscosity and diffusivty, here just 1/Re since we are solving the non-dimensional equations 
     boundary_conditions = (u = u_bcs, w = w_bcs, b = b_bcs), # specify the boundary conditions that we defiend above
-               coriolis = nothing  # this line tells the mdoel not to include system rotation (no Coriolis acceleration)
+               coriolis = nothing # this line tells the mdoel not to include system rotation (no Coriolis acceleration)
 )
 
 # Set initial conditions
@@ -69,7 +69,7 @@ model = NonhydrostaticModel(; grid,
 uᵢ(x, y, z) = kick * randn()
 vᵢ(x, y, z) = 0
 wᵢ(x, y, z) = kick * randn()
-bᵢ(x, y, z) = (Δb / 2) * (1 + tanh((x - xl) / Lf))
+bᵢ(x, y, z) = (Δb / 2) * (1 - tanh((xl - x) / Lf))  + (Δb / 2) * (1 + tanh((9 - x) / Lf)) 
 cᵢ(x, y, z) = exp(-((x - Lx / 2) / (Lx / 50))^2) # Initialize with a thin tracer (dye) streak in the center of the domain
 
 # Send the initial conditions to the model to initialize the variables
@@ -107,6 +107,7 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(10))
 u, v, w = model.velocities # unpack velocity `Field`s
 b = model.tracers.b # extract the buoyancy
 c = model.tracers.c # extract the tracer
+
 # Set the name of the output file
 filename = "gravitycurrent"
 
@@ -115,10 +116,7 @@ simulation.output_writers[:xz_slices] =
                           filename = filename * ".jld2",
                           indices = (:, 1, :),
                          schedule = TimeInterval(0.2),
-                            overwrite_existing = true
-                            )
-
-
+                            overwrite_existing = true)
 
 # If you are running in 3D, you could save an xy slice like this:                             
 #simulation.output_writers[:xy_slices] =

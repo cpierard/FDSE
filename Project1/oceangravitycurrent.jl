@@ -16,16 +16,16 @@ Nz = 64   # number of gridpoints in the z-direction
 
 # Some timestepping parameters
 max_Δt = 0.05 # maximum allowable timestep 
-duration = 20 # The non-dimensional duration of the simulation
+duration = 180 # The non-dimensional duration of the simulation
 
 # Set the Reynolds number (Re=Ul/ν)
-Re = 5000
+Re = 169000
 
 # Set the change in the non-dimensional buouancy 
-Δb = 1
+Δb = 0.028
 
 # Set the amplitude of the random perturbation (kick)
-kick = 0.05
+kick = 0
 
 # Now, some parameters that will be used for the initial conditions
 xl = Lx / 10 # The location of the 'lock'
@@ -61,16 +61,19 @@ model = NonhydrostaticModel(; grid,
                buoyancy = Buoyancy(model=BuoyancyTracer()), # this tells the model that b will act as the buoyancy (and influence momentum) 
                 closure = (ScalarDiffusivity(ν = 1 / Re, κ = 1 / Re)),  # set a constant kinematic viscosity and diffusivty, here just 1/Re since we are solving the non-dimensional equations 
     boundary_conditions = (u = u_bcs, w = w_bcs, b = b_bcs), # specify the boundary conditions that we defiend above
-               coriolis = nothing  # this line tells the mdoel not to include system rotation (no Coriolis acceleration)
-)
+               coriolis = nothing,  # this line tells the mdoel not to include system rotation (no Coriolis acceleration 
+               )
 
 # Set initial conditions
 # Here, we start with a tanh function for buoyancy and add a random perturbation to the velocity. 
 uᵢ(x, y, z) = kick * randn()
 vᵢ(x, y, z) = 0
 wᵢ(x, y, z) = kick * randn()
-bᵢ(x, y, z) = (Δb / 2) * (1 + tanh((x - xl) / Lf))
-cᵢ(x, y, z) = exp(-((x - Lx / 2) / (Lx / 50))^2) # Initialize with a thin tracer (dye) streak in the center of the domain
+bᵢ(x, y, z) = (Δb / 2) * (1 + tanh((x - xl) / Lf)) 
+
+γ = 1
+σ = 1/50
+cᵢ(x, y, z) = γ*exp(-(z-0)^2/σ^2)  # Initialize with a thin tracer (dye) streak in the center of the domain
 
 # Send the initial conditions to the model to initialize the variables
 set!(model, u = uᵢ, v = vᵢ, w = wᵢ, b = bᵢ, c = cᵢ)
@@ -107,26 +110,19 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(10))
 u, v, w = model.velocities # unpack velocity `Field`s
 b = model.tracers.b # extract the buoyancy
 c = model.tracers.c # extract the tracer
+ω = ∂x(v) - ∂y(u)
+
 # Set the name of the output file
-filename = "gravitycurrent"
+filename = "oceangravitycurrent2"
 
 simulation.output_writers[:xz_slices] =
-    JLD2OutputWriter(model, (; u, v, w, b, c),
+    JLD2OutputWriter(model, (; u, v, w, b, c, ω),
                           filename = filename * ".jld2",
                           indices = (:, 1, :),
                          schedule = TimeInterval(0.2),
                             overwrite_existing = true
                             )
 
-
-
-# If you are running in 3D, you could save an xy slice like this:                             
-#simulation.output_writers[:xy_slices] =
-#    JLD2OutputWriter(model, (; u, v, w, b),
-#                          filename = filename * "_xy.jld2",
-#                          indices = (:,:,10),
-#                        schedule = TimeInterval(0.1),
-#                            overwrite_existing = true)
 
 nothing # hide
 

@@ -18,10 +18,13 @@ grid = RectilinearGrid(topology = (Bounded, Flat, Bounded), size = (100, 100, ),
 u_bcs = FieldBoundaryConditions(top = ValueBoundaryCondition(vel_top), bottom = ValueBoundaryCondition(0.0))
 w_bcs = FieldBoundaryConditions(east = ValueBoundaryCondition(0.0), west = ValueBoundaryCondition(0.0))
 
+# biogeochemistry = PhytoplanktonZooplankton()
+biogeochemistry = PhytoplanktonZooplankton(sinking_velocity = 1e-4)
+
 # Construct the model using Oceananigans with the biogeochemistry handled by OceanBioME
 model = NonhydrostaticModel(; grid,
                               advection = UpwindBiasedFifthOrder(),
-                              biogeochemistry = PhytoplanktonZooplankton(),
+                              biogeochemistry = biogeochemistry,
                               closure = ScalarDiffusivity(ν = κₜ, κ = κₜ),
                               boundary_conditions = (u = u_bcs, w = w_bcs))
 
@@ -34,7 +37,7 @@ u, v, w = model.velocities # unpack velocity `Field`s
 P = model.tracers.P
 Z = model.tracers.Z
 
-filename = "cavity_PZ"
+filename = "cavity_PZ_1"
 
 # Create an 'output_writer' to save data periodically
 simulation.output_writers[:xz_slices] =

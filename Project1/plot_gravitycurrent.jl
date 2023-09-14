@@ -4,7 +4,7 @@
 using Oceananigans, JLD2, Plots, Printf, Formatting
 
 # Set the filename (without the extension)
-filename = "gravitycurrent"
+filename = "gravitycurrent2"
 
 # Read in the first iteration.  We do this to load the grid
 # filename * ".jld2" concatenates the extension to the end of the filename
@@ -34,6 +34,9 @@ t_save = zeros(length(iterations))
 b_bottom = zeros(length(b_ic[:, 1, 1]), length(iterations))
 u_bottom = zeros(length(u_ic[:, 1, 1]), length(iterations))
 
+u_domain = zeros(length(u_ic[256, 1, :]), length(iterations))
+
+
 # Here, we loop over all iterations
 anim = @animate for (i, iter) in enumerate(iterations)
 
@@ -45,6 +48,7 @@ anim = @animate for (i, iter) in enumerate(iterations)
     b_xz = file_xz["timeseries/b/$iter"][:, 1, :];
     c_xz = file_xz["timeseries/c/$iter"][:, 1, :];
 
+
 # If you want an x-y slice, you can get it this way:
     # b_xy = file_xy["timeseries/b/$iter"][:, :, 1];
 
@@ -55,11 +59,13 @@ anim = @animate for (i, iter) in enumerate(iterations)
     u_bottom[:,i] = u_xz[:, 1, 1]; # This is the velocity along the bottom wall
     t_save[i] = t # save the time
 
+    u_domain[:,i] = u_xz[256, :, 1]
+    
         u_xz_plot = heatmap(xu, zu, u_xz'; color = :balance, xlabel = "x", ylabel = "z", aspect_ratio = :equal);  
         v_xz_plot = heatmap(xv, zv, v_xz'; color = :balance, xlabel = "x", ylabel = "z", aspect_ratio = :equal); 
         w_xz_plot = heatmap(xw, zw, w_xz'; color = :balance, xlabel = "x", ylabel = "z", aspect_ratio = :equal); 
         b_xz_plot = heatmap(xb, zb, b_xz'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal); 
-        c_xz_plot = heatmap(xc, zc, c_xz'; color = :thermal, xlabel = "x", ylabel = "z", aspect_ratio = :equal); 
+        c_xz_plot = heatmap(xc, zc, c_xz'; color = :viridis, xlabel = "x", ylabel = "z", aspect_ratio = :equal); 
 
     u_title = @sprintf("u, t = %s", round(t));
     v_title = @sprintf("v, t = %s", round(t));
@@ -68,39 +74,43 @@ anim = @animate for (i, iter) in enumerate(iterations)
     c_title = @sprintf("c (dye), t = %s", round(t));
 
 # Combine the sub-plots into a single figure
-    plot(b_xz_plot, c_xz_plot, layout = (2, 1), size = (1600, 400),
-    title = [b_title c_title])
+    plot(b_xz_plot, u_xz_plot, layout = (2, 1), size = (1600, 400),
+    title = [b_title u_title])
 
     iter == iterations[end] && close(file_xz)
 end
 
 # Save the animation to a file
-mp4(anim, "gravitycurrent.mp4", fps = 20) # hide
+mp4(anim, filename * ".mp4", fps = 20) # hide
 
 # Now, make a plot of our saved variables
 # In this case, plot the buoyancy at the bottom of the domain as a function of x and t
 # You can (and should) change this to interrogate other quantities
-heatmap(xb, t_save, b_bottom', xlabel="x", ylabel="t", title="buoyancy at z=0")
-savefig("buoyancy_bottom.png")
+# heatmap(xb, t_save, b_bottom', xlabel="x", ylabel="t", title="buoyancy at z=0")
+# savefig("buoyancy_bottom2.png")
 
-Δx = xb[2] - xb[1]
+# Δx = xb[2] - xb[1]
 
 
-Δt = t_save[2] - t_save[1]
-x_idx = 200
-distance = (x_idx)*Δx
+# Δt = t_save[2] - t_save[1]
+# x_idx = 200
+# distance = (x_idx)*Δx
 
-b_atx = b_bottom[x_idx, :]
-b_atx_shifted = circshift(b_atx, 1)
-grad_b_atx = (b_atx - b_atx_shifted)/Δt
-idx_blob_atx = argmin(grad_b_atx)
+# b_atx = b_bottom[x_idx, :]
+# b_atx_shifted = circshift(b_atx, 1)
+# grad_b_atx = (b_atx - b_atx_shifted)/Δt
+# idx_blob_atx = argmin(grad_b_atx)
 
-U = t_save[idx_blob_atx]/distance
+# U = t_save[idx_blob_atx]/distance
 
 # U = (t_save[idx_blob_at8]- t_save[idx_blob_at2])/distance
 
-plot(t_save, grad_b_atx, label="x= %", xlabel="t", ylabel=" db/dt")
+# plot(t_save, grad_b_atx, label="x= %", xlabel="t", ylabel=" db/dt")
 # plot!(t_save, grad_b_at8, label="x=7.8")
 
 
-println("The propagation velocity", U)
+# println("The propagation velocity", U)
+plot(u_domain[:,40], zu, label="t="*string(t_save[40])*"s", xlabel="u", ylabel="z")
+plot!(u_domain[:,60], zu, label="t="*string(t_save[60])*"s")
+plot!(u_domain[:,62], zu, label="t="*string(t_save[62])*"s")
+savefig("u_profile2.png")

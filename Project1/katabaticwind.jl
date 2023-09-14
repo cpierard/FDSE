@@ -12,20 +12,20 @@ Lz = 1   # size in the vertical (z) direction
 
 # Set the grid size
 Nx = 512  # number of gridpoints in the x-direction
-Nz = 64   # number of gridpoints in the z-direction
+Nz = 128   # number of gridpoints in the z-direction
 
 # Some timestepping parameters
 max_Δt = 0.05 # maximum allowable timestep 
 duration = 20 # The non-dimensional duration of the simulation
 
 # Set the Reynolds number (Re=Ul/ν)
-Re = 5000
+Re = 61000
 
 # Set the change in the non-dimensional buouancy 
-Δb = 1
+Δb = 0.98
 
 # Set the amplitude of the random perturbation (kick)
-kick = 0.05
+kick = 0
 
 # Now, some parameters that will be used for the initial conditions
 xl = Lx / 10 # The location of the 'lock'
@@ -35,6 +35,18 @@ Lf = Lx / 100 # The width of the initial buoyancy step
 # Here, the topology parameter sets the style of boundaries in the x, y, and z directions
 # 'Bounded' corresponds to wall-bounded directions and 'Flat' corresponds to the dimension that is not considered (here, that is the y direction)
 grid = RectilinearGrid(size = (Nx, Nz), x = (0, Lx), z = (0, Lz), topology = (Bounded, Flat, Bounded))
+
+n_particles = 10;
+x₀ = rand(n_particles);
+y₀ = zeros(n_particles);
+z₀ = 0.1 * ones(n_particles);
+
+θ = 23; # degrees
+g̃ = (sind(θ), 0, -cosd(θ));
+gravity_unit_vector = g̃
+
+# lagrangian_particles = LagrangianParticles(x=x₀, y=y₀, z=z₀)
+
 
 # set the boundary conditions
 # FluxBoundaryCondition specifies the momentum or buoyancy flux (in this case zero)
@@ -58,7 +70,7 @@ model = NonhydrostaticModel(; grid,
               advection = UpwindBiasedFifthOrder(),  # Specify the advection scheme.  Another good choice is WENO() which is more accurate but slower
             timestepper = :RungeKutta3, # Set the timestepping scheme, here 3rd order Runge-Kutta
                 tracers = (:b, :c),  # Set the name(s) of any tracers, here b is buoyancy and c is a passive tracer (e.g. dye)
-               buoyancy = Buoyancy(model=BuoyancyTracer()), # this tells the model that b will act as the buoyancy (and influence momentum) 
+               buoyancy = Buoyancy(model=BuoyancyTracer(), gravity_unit_vector=g̃), # this tells the model that b will act as the buoyancy (and influence momentum) 
                 closure = (ScalarDiffusivity(ν = 1 / Re, κ = 1 / Re)),  # set a constant kinematic viscosity and diffusivty, here just 1/Re since we are solving the non-dimensional equations 
     boundary_conditions = (u = u_bcs, w = w_bcs, b = b_bcs), # specify the boundary conditions that we defiend above
                coriolis = nothing  # this line tells the mdoel not to include system rotation (no Coriolis acceleration)
@@ -107,8 +119,9 @@ simulation.callbacks[:progress] = Callback(progress, IterationInterval(10))
 u, v, w = model.velocities # unpack velocity `Field`s
 b = model.tracers.b # extract the buoyancy
 c = model.tracers.c # extract the tracer
+particles = model.particles
 # Set the name of the output file
-filename = "gravitycurrent"
+filename = "gravitycurrent2"
 
 simulation.output_writers[:xz_slices] =
     JLD2OutputWriter(model, (; u, v, w, b, c),

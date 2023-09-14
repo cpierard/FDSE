@@ -7,15 +7,15 @@ using Printf
 include("PZ.jl")
 
 # Set the diffusion coefficient
-κₜ = 0.0
+κₜ = 0
 
 # define the grid
 grid = RectilinearGrid(topology = (Flat, Flat, Bounded), size = (100, ), extent = (1, ))
 
 # Specify the biogeochemical model
-biogeochemistry = PhytoplanktonZooplankton()
+# biogeochemistry = PhytoplanktonZooplankton()
 # To change the e-folding decay length for the light, replace with the following
-#biogeochemistry = PhytoplanktonZooplankton(light_decay_length=0.1)
+biogeochemistry = PhytoplanktonZooplankton(light_decay_length=0.2, phytoplankton_growth_rate = 0.25, sinking_velocity = 1e-4)
 
 # Construct the model using Oceananigans with the biogeochemistry handled by OceanBioME
 model = NonhydrostaticModel(; grid,
@@ -62,3 +62,5 @@ hmP = heatmap(times , zc, log10.(abs.(P[1, 1, 1:grid.Nz, 1:end])), xlabel = "tim
 hmZ = heatmap(times , zc, log10.(abs.(Z[1, 1, 1:grid.Nz, 1:end])), xlabel = "time", ylabel = "z (m)", title="log10(Zooplankton)")
 
 plot(hmP, hmZ, layout=(2,1))
+# Save the plot to a file
+savefig("PZ_column_ld02_zgr02.png")

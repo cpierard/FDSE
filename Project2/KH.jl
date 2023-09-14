@@ -34,6 +34,14 @@ kick = 5e-3
 # Here, we use periodic (cyclic) boundary conditions in x
 grid = RectilinearGrid(size = (Nx, Nz), x = (0, Lx), z = (0, Lz), topology = (Periodic, Flat, Bounded))
 
+n_particles = 10;
+x₀ = Lx*rand(n_particles);
+y₀ = zeros(n_particles);
+z₀ = Lz/2 * ones(n_particles);
+
+lagrangian_particles = LagrangianParticles(x=x₀, y=y₀, z=z₀)
+
+
 # No boundary conditions explicitly set - the BCs will default to free-slip and no-flux in z
 
 # Now, define a 'model' where we specify the grid, advection scheme, bcs, and other settings
@@ -43,8 +51,9 @@ model = NonhydrostaticModel(; grid,
                 tracers = (:b),  # Set the name(s) of any tracers, here b is buoyancy
                buoyancy = Buoyancy(model=BuoyancyTracer()), # this tells the model that b will act as the buoyancy (and influence momentum) 
                 closure = (ScalarDiffusivity(ν = 1 / Re, κ = 1 / Re)),  # set a constant kinematic viscosity and diffusivty, here just 1/Re since we are solving the non-dimensional equations 
-                coriolis = nothing # this line tells the mdoel not to include system rotation (no Coriolis acceleration)
-)
+                coriolis = nothing, # this line tells the mdoel not to include system rotation (no Coriolis acceleration)
+                particles = lagrangian_particles
+                )
 
 # Set initial conditions
 # Here, we start with a tanh function for buoyancy and add a random perturbation to the velocity. 

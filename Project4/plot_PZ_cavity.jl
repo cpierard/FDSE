@@ -4,7 +4,7 @@
 using Oceananigans, JLD2, Plots, Printf
 
 # Set the filename (without the extension)
-filename = "cavity_PZ"
+filename = "cavity_PZ_1"
 
 # Read in the first iteration.  We do this to load the grid
 # filename * ".jld2" concatenates the extension to the end of the filename
@@ -66,4 +66,4 @@ anim = @animate for (i, iter) in enumerate(iterations)
 end
 
 # Save the animation to a file
-mp4(anim, "PZ_cavity.mp4", fps = 20) # hide
+mp4(anim, "PZ_cavity_1.mp4", fps = 20) # hide
